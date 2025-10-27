@@ -1,9 +1,13 @@
-use crate::window;
-use gl46::*;
+use crate::{
+    shader_program::{self, ShaderProgram, ShaderProgramCreateInfo},
+    window,
+};
+use gl::*;
 use std::{ffi::CStr, rc::Rc};
 
 pub struct KEngine {
     window: window::KWindow,
+    shader_program: ShaderProgram,
     gl: Rc<GlFns>,
 }
 
@@ -24,10 +28,21 @@ impl KEngine {
 
         let gl = unsafe { GlFns::load_from(&load_function) };
         let gl = gl.expect("Failed to load OpenGL functions");
+        let gl = Rc::new(gl);
+
+        let program_create_info = ShaderProgramCreateInfo {
+            gl: gl.clone(),
+            vertex_path: "base/shaders/vertex.vert.spv",
+            fragment_path: "base/shaders/fragment.frag.spv",
+            source_type: shader_program::ShaderSourceType::SPIRV,
+        };
+
+        let shader_program = ShaderProgram::new(program_create_info);
 
         KEngine {
+            gl,
             window,
-            gl: Rc::new(gl),
+            shader_program,
         }
     }
 

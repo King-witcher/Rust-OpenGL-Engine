@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build (Debug)",
+      "label": "cargo build: debug",
       "type": "shell",
       "command": "cargo",
       "args": [
@@ -18,8 +18,9 @@
       },
       "problemMatcher": ["$rustc"]
     },
+
     {
-      "label": "Build (Release)",
+      "label": "cargo build: release",
       "type": "cargo",
       "command": "build",
       "args": [
@@ -34,6 +35,51 @@
         "isDefault": true
       },
       "problemMatcher": ["$rustc"],
-    }
+    },
+
+    {
+      "label": "glslc: compile",
+      "detail": "Compile all GLSL shaders",
+      "icon": {
+        "color": "terminal.ansiMagenta",
+        "id": "paintcan"
+      },
+      "type": "shell",
+      "group": "build",
+      "command": "./compile_shaders.sh",
+      "problemMatcher": {
+        "owner": "glslc",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "(.+\\.(frag|vert)):(\\d+): (error|warning): (.+)",
+          "file": 1,
+          "line": 3,
+          "severity": 4,
+          "message": 5,
+        }
+      },
+    },
+
+    {
+      "label": "build: debug",
+      "icon": {
+        "color": "terminal.ansiGreen",
+        "id": "debug"
+      },
+      "group": "build",
+      "dependsOrder": "parallel",
+      "dependsOn": ["glslc: compile", "cargo build: debug"],
+    },
+
+    {
+      "label": "build: release",
+      "icon": {
+        "color": "terminal.ansiGreen",
+        "id": "rocket"
+      },
+      "group": "build",
+      "dependsOrder": "parallel",
+      "dependsOn": ["glslc: compile", "cargo build: release"],
+    },
   ]
 }

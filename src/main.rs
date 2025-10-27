@@ -1,4 +1,4 @@
-extern crate gl46;
+extern crate gl46 as gl;
 extern crate sdl2;
 
 mod engine;
