@@ -1,4 +1,5 @@
 use crate::{
+    model::{Model, ModelCreateInfo, Polygon, Vertex},
     shader_program::{self, ShaderProgram, ShaderProgramCreateInfo},
     window,
 };
@@ -7,8 +8,9 @@ use std::{ffi::CStr, rc::Rc};
 
 pub struct KEngine {
     window: window::KWindow,
-    shader_program: ShaderProgram,
     gl: Rc<GlFns>,
+    shader_program: ShaderProgram,
+    model: Model,
 }
 
 impl KEngine {
@@ -30,6 +32,10 @@ impl KEngine {
         let gl = gl.expect("Failed to load OpenGL functions");
         let gl = Rc::new(gl);
 
+        unsafe {
+            gl.Viewport(0, 0, width as i32, height as i32);
+        }
+
         let program_create_info = ShaderProgramCreateInfo {
             gl: gl.clone(),
             vertex_path: "base/shaders/vertex.vert.spv",
@@ -39,15 +45,21 @@ impl KEngine {
 
         let shader_program = ShaderProgram::new(program_create_info);
 
+        let model = Self::load_models(gl.clone());
+
         KEngine {
             gl,
             window,
             shader_program,
+            model,
         }
     }
 
     pub fn run(&self) {
         unsafe {
+            self.model.bind();
+            self.shader_program.use_program();
+
             let mut event_pump = self.window.event_pump();
             self.gl.ClearColor(0.1, 0.2, 0.3, 1.0);
 
@@ -59,9 +71,51 @@ impl KEngine {
                     }
                 }
 
-                self.gl.Clear(GL_COLOR_BUFFER_BIT);
-                self.window.swap_window();
+                self.draw_frame();
             }
         }
+    }
+
+    fn draw_frame(&self) {
+        unsafe {
+            self.gl.Clear(GL_COLOR_BUFFER_BIT);
+            self.gl.DrawElements(
+                GL_TRIANGLES,
+                self.model.vertex_count() as i32,
+                GL_UNSIGNED_INT,
+                0 as _,
+            );
+            self.window.swap_window();
+        }
+    }
+
+    fn load_models(gl: Rc<GlFns>) -> Model {
+        let vertices = vec![
+            Vertex {
+                position: [-0.5, -0.5],
+                color: [1.0, 0.0, 0.0],
+                tex_coords: [0.0, 0.0],
+            },
+            Vertex {
+                position: [0.5, -0.5],
+                color: [0.0, 1.0, 0.0],
+                tex_coords: [1.0, 0.0],
+            },
+            Vertex {
+                position: [0.0, 0.5],
+                color: [0.0, 0.0, 1.0],
+                tex_coords: [0.5, 1.0],
+            },
+        ];
+
+        let polygons = vec![Polygon { indices: [0, 1, 2] }];
+
+        let create_info = ModelCreateInfo {
+            gl,
+            vertices: &vertices,
+            polygons: &polygons,
+        };
+
+        Model::new(create_info)
     }
 }

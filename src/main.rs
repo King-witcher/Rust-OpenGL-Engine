@@ -2,6 +2,7 @@ extern crate gl46 as gl;
 extern crate sdl2;
 
 mod engine;
+mod model;
 mod shader_program;
 mod window;
 
