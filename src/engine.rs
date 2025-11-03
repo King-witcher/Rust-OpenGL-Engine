@@ -1,7 +1,11 @@
 use crate::{
     FilterMode, Texture, TextureCreateInfo, TextureFormat,
     archive::EngineArchive,
-    model::{Model, ModelCreateInfo, Polygon, Vertex},
+    scene::{
+        Scene, SceneCreateInfo,
+        camera::{Camera, CameraCreateInfo, CameraType},
+        model::{Model, ModelCreateInfo, Polygon, Vertex},
+    },
     shader_program::{self, ShaderProgram, ShaderProgramCreateInfo},
     window,
 };
@@ -9,16 +13,14 @@ use anyhow::Result;
 use gl::*;
 use image::ImageBuffer;
 use nalgebra_glm::{self as glm, Mat4};
+use sdl2::{event::Event, keyboard::Keycode};
 use std::{ffi::CStr, rc::Rc};
 
 pub struct KEngine {
     window: window::KWindow,
     archive: EngineArchive,
     gl: Rc<GlFns>,
-    main_texture: Texture,
-
-    shader_program: ShaderProgram,
-    model: Model,
+    scene: Scene,
 }
 
 impl KEngine {
@@ -52,6 +54,7 @@ impl KEngine {
             fragment_path: "base/shaders/fragment.frag.spv",
             source_type: shader_program::ShaderSourceType::SPIRV,
         });
+        let shader_program = Rc::new(shader_program);
 
         let main_texture = Texture::from(TextureCreateInfo {
             gl: gl.clone(),
@@ -64,51 +67,59 @@ impl KEngine {
             mag_filter: FilterMode::Linear,
             mipmap_interpolation: Some(FilterMode::Linear),
         });
+        let main_texture = Rc::new(main_texture);
 
-        let model = Self::load_cube(gl.clone());
+        let model = Self::load_cube(gl.clone(), shader_program.clone(), main_texture.clone());
+
+        let camera = Camera::from(CameraCreateInfo {
+            camera_type: CameraType::Perspective {
+                fov: 90.0,
+                aspect: 16.0 / 9.0,
+            },
+            far: 1000000000.0,
+            near: 0.1,
+            position: glm::vec3(0.0, 0.0, 4.0),
+        });
+
+        let scene = Scene::from(SceneCreateInfo {
+            gl: gl.clone(),
+            models: vec![model],
+            camera,
+        });
 
         Ok(KEngine {
             gl,
-            main_texture,
             archive,
             window,
-            shader_program,
-            model,
+            scene,
         })
     }
 
-    pub fn run(&self) {
+    pub fn run(&mut self) {
         unsafe {
-            self.model.bind();
-            self.shader_program.use_program();
-
-            let mut model_mat = glm::rotate(
-                &Mat4::identity(),
-                45.0f32.to_radians(),
-                &glm::vec3(1.0, 0.0, 0.0),
-            );
-            let view_mat = glm::translate(&Mat4::identity(), &glm::vec3(0.0, 0.0, -3.0));
-            let proj_mat = glm::perspective(16.0 / 9.0, 60.0f32.to_radians(), 0.1, 100.0);
-
-            self.shader_program.set_uniform_mat_4(1, view_mat);
-            self.shader_program.set_uniform_mat_4(2, proj_mat);
-
             let mut event_pump = self.window.event_pump();
             self.gl.ClearColor(0.2, 0.1, 0.3, 1.0);
             self.gl.Enable(GL_DEPTH_TEST);
-            self.main_texture.bind(0);
 
             'main_loop: loop {
                 for event in event_pump.poll_iter() {
                     match event {
-                        sdl2::event::Event::Quit { .. } => break 'main_loop,
+                        Event::Quit { .. } => break 'main_loop,
+                        Event::KeyDown { keycode, .. } => {
+                            if let Some(Keycode::Escape) = keycode {
+                                break 'main_loop;
+                            }
+                        }
                         _ => {}
                     }
                 }
-
-                model_mat = glm::rotate(&model_mat, 0.1f32.to_radians(), &glm::vec3(0.0, 1.0, 0.0));
-                self.shader_program.set_uniform_mat_4(0, model_mat);
-
+                let rotation = glm::rotate(
+                    &Mat4::identity(),
+                    0.05f32.to_radians(),
+                    &glm::vec3(1.0, 1.0, 1.0),
+                );
+                let model = &mut self.scene.models[0];
+                model.rotate(&rotation);
                 self.draw_frame();
             }
         }
@@ -118,17 +129,12 @@ impl KEngine {
         unsafe {
             self.gl.Clear(GL_COLOR_BUFFER_BIT);
             self.gl.Clear(GL_DEPTH_BUFFER_BIT);
-            self.gl.DrawElements(
-                GL_TRIANGLES,
-                self.model.vertex_count() as i32,
-                GL_UNSIGNED_INT,
-                0 as _,
-            );
+            self.scene.render();
             self.window.swap_window();
         }
     }
 
-    fn load_cube(gl: Rc<GlFns>) -> Model {
+    fn load_cube(gl: Rc<GlFns>, shader_program: Rc<ShaderProgram>, texture: Rc<Texture>) -> Model {
         let vertices = vec![
             Vertex {
                 position: [-1.0, -1.0, 1.0],
@@ -189,8 +195,15 @@ impl KEngine {
 
         let create_info = ModelCreateInfo {
             gl,
-            vertices: &vertices,
-            polygons: &polygons,
+            vertices,
+            polygons,
+            model_matrix: glm::rotate(
+                &Mat4::identity(),
+                45.0f32.to_radians(),
+                &glm::vec3(1.0, 0.0, 0.0),
+            ),
+            shader_program,
+            texture,
         };
 
         Model::new(create_info)

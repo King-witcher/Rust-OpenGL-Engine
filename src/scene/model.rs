@@ -1,13 +1,25 @@
 use std::rc::Rc;
 
-use gl::{GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, GLenum};
+use gl::{
+    GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, GL_TRIANGLES, GL_UNSIGNED_BYTE,
+    GL_UNSIGNED_INT, GLenum,
+};
+use nalgebra_glm::Mat4;
+
+use crate::{Texture, scene::camera::Camera, shader_program::ShaderProgram};
 
 pub struct Model {
     gl: Rc<gl46::GlFns>,
     vbo: u32,
     ebo: u32,
     vao: u32,
-    vertex_count: usize,
+    vertex_count: i32,
+    model_matrix: Mat4,
+    texture: Rc<Texture>,
+    shader_program: Rc<ShaderProgram>,
+    model_location: i32,
+    view_location: i32,
+    projection_location: i32,
 }
 
 #[repr(C)]
@@ -24,10 +36,13 @@ pub struct Polygon {
     pub indices: [u32; 3],
 }
 
-pub struct ModelCreateInfo<'s> {
+pub struct ModelCreateInfo {
     pub gl: Rc<gl46::GlFns>,
-    pub vertices: &'s [Vertex],
-    pub polygons: &'s [Polygon],
+    pub vertices: Vec<Vertex>,
+    pub polygons: Vec<Polygon>,
+    pub model_matrix: Mat4,
+    pub texture: Rc<Texture>,
+    pub shader_program: Rc<ShaderProgram>,
 }
 
 struct AttributeDescription {
@@ -44,9 +59,12 @@ impl Model {
             gl,
             vertices,
             polygons,
+            texture,
+            model_matrix,
+            shader_program,
         } = create_info;
 
-        let vertex_count = polygons.len() * 3;
+        let vertex_count = (polygons.len() * 3) as i32;
         let mut vao = 0;
         let mut vbo = 0;
         let mut ebo = 0;
@@ -86,12 +104,22 @@ impl Model {
                 );
             }
 
+            let model_location = shader_program.uniform_location("model");
+            let view_location = shader_program.uniform_location("view");
+            let projection_location = shader_program.uniform_location("projection");
+
             Self {
                 gl,
                 vbo,
                 ebo,
                 vao,
+                texture,
                 vertex_count,
+                model_matrix,
+                shader_program,
+                model_location,
+                view_location,
+                projection_location,
             }
         }
     }
@@ -100,8 +128,34 @@ impl Model {
         self.gl.BindVertexArray(self.vao);
     }
 
-    pub fn vertex_count(&self) -> usize {
-        self.vertex_count
+    pub fn model_matrix(&self) -> &Mat4 {
+        &self.model_matrix
+    }
+
+    pub fn rotate(&mut self, rotation: &Mat4) {
+        self.model_matrix = rotation * self.model_matrix;
+    }
+
+    pub fn render(&self, camera: &Camera) {
+        self.shader_program.use_program();
+        self.texture.bind(0);
+        self.bind();
+
+        self.shader_program
+            .set_uniform_mat_4(self.model_location, self.model_matrix);
+        self.shader_program
+            .set_uniform_mat_4(self.view_location, camera.view_matrix);
+        self.shader_program
+            .set_uniform_mat_4(self.projection_location, camera.projection_matrix);
+
+        unsafe {
+            self.gl.DrawElements(
+                GL_TRIANGLES,
+                self.vertex_count as _,
+                GL_UNSIGNED_INT,
+                0 as _,
+            );
+        }
     }
 
     fn default_attribute_descriptions() -> Vec<AttributeDescription> {

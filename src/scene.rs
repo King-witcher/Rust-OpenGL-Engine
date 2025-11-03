@@ -1,0 +1,36 @@
+use std::rc::Rc;
+
+use camera::Camera;
+use gl::GlFns;
+use model::Model;
+
+pub mod camera;
+pub mod model;
+
+pub struct Scene {
+    pub models: Vec<Model>,
+    camera: Camera,
+}
+
+pub struct SceneCreateInfo {
+    pub gl: Rc<GlFns>,
+    pub models: Vec<Model>,
+    pub camera: Camera,
+}
+
+impl Scene {
+    pub fn render(&self) {
+        for model in &self.models {
+            model.render(&self.camera);
+        }
+    }
+}
+
+impl From<SceneCreateInfo> for Scene {
+    fn from(create_info: SceneCreateInfo) -> Self {
+        Scene {
+            models: create_info.models,
+            camera: create_info.camera,
+        }
+    }
+}
