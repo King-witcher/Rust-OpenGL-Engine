@@ -82,7 +82,6 @@ impl KEngine {
         });
 
         let scene = Scene::from(SceneCreateInfo {
-            gl: gl.clone(),
             models: vec![model],
             camera,
         });

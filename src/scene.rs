@@ -1,7 +1,4 @@
-use std::rc::Rc;
-
 use camera::Camera;
-use gl::GlFns;
 use model::Model;
 
 pub mod camera;
@@ -13,7 +10,6 @@ pub struct Scene {
 }
 
 pub struct SceneCreateInfo {
-    pub gl: Rc<GlFns>,
     pub models: Vec<Model>,
     pub camera: Camera,
 }

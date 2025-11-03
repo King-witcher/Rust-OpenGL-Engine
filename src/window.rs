@@ -1,5 +1,3 @@
-use sdl2::video::gl_attr::GLAttr;
-
 pub struct KWindow {
     sdl_context: sdl2::Sdl,
     _sdl_video: sdl2::VideoSubsystem,
