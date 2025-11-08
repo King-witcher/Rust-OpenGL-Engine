@@ -68,9 +68,9 @@ impl KEngine {
             mip_level: 0,
             wrap_s: crate::texture::WrapMode::Repeat,
             wrap_t: crate::texture::WrapMode::Repeat,
-            min_filter: FilterMode::Linear,
+            min_filter: FilterMode::Nearest,
             mag_filter: FilterMode::Linear,
-            mipmap_interpolation: Some(FilterMode::Linear),
+            mipmap_interpolation: Some(FilterMode::Nearest),
         });
         let main_texture = Rc::new(main_texture);
 
@@ -144,6 +144,10 @@ impl KEngine {
         let mouse_rel = input.mouse_rel();
         let delta_yaw = mouse_rel.0 as f32 * 0.022 * 2.2;
         let delta_pitch = -mouse_rel.1 as f32 * 0.022 * 2.2;
+        let right = camera
+            .direction()
+            .cross(&glm::vec3(0.0, 1.0, 0.0))
+            .normalize();
         camera.rotate(delta_yaw, delta_pitch);
 
         if input.is_key_down(Scancode::W) {
@@ -155,13 +159,11 @@ impl KEngine {
         }
 
         if input.is_key_down(Scancode::A) {
-            camera
-                .translate(-camera.direction().cross(&glm::vec3(0.0, 1.0, 0.0)) * delta_time * 5.0);
+            camera.translate(-right * delta_time * 5.0);
         }
 
         if input.is_key_down(Scancode::D) {
-            camera
-                .translate(camera.direction().cross(&glm::vec3(0.0, 1.0, 0.0)) * delta_time * 5.0);
+            camera.translate(right * delta_time * 5.0);
         }
     }
 

@@ -6,7 +6,7 @@ pub struct Camera {
 
     yaw: f32,
     pitch: f32,
-    bob: f32,
+    roll: f32,
 
     camera_matrix: Mat4,
     direction: Vec3,
@@ -52,7 +52,7 @@ impl Camera {
     }
 
     pub fn bob(&self) -> f32 {
-        self.bob
+        self.roll
     }
 
     pub fn direction(&self) -> Vec3 {
@@ -75,7 +75,7 @@ impl Camera {
     }
 
     pub fn set_bob(&mut self, bob: f32) {
-        self.bob = bob;
+        self.roll = bob;
         self.update_camera_matrix();
     }
 
@@ -137,7 +137,7 @@ impl From<CameraCreateInfo> for Camera {
             position,
             yaw: -90.0,
             pitch: 0.0,
-            bob: 0.0,
+            roll: 0.0,
         };
 
         camera.update_camera_matrix();
