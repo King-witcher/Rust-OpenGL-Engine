@@ -1,15 +1,10 @@
 use nalgebra_glm::{self as glm, Mat4, Vec3};
 
 pub struct Camera {
-    position: Vec3,
     projection_matrix: Mat4,
-
+    position: Vec3,
     yaw: f32,
     pitch: f32,
-    roll: f32,
-
-    camera_matrix: Mat4,
-    direction: Vec3,
 }
 
 pub enum CameraType {
@@ -35,9 +30,9 @@ pub struct CameraCreateInfo {
 impl Camera {
     const UP: Vec3 = Vec3::new(0.0, 1.0, 0.0);
 
-    pub fn camera_matrix(&self) -> Mat4 {
-        self.camera_matrix
-    }
+    // pub fn camera_matrix(&self) -> Mat4 {
+    //     self.camera_matrix
+    // }
 
     pub fn position(&self) -> Vec3 {
         self.position
@@ -51,58 +46,71 @@ impl Camera {
         self.pitch
     }
 
-    pub fn bob(&self) -> f32 {
-        self.roll
-    }
+    // pub fn bob(&self) -> f32 {
+    //     self.roll
+    // }
 
     pub fn direction(&self) -> Vec3 {
-        self.direction
+        glm::vec3(
+            -self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
+            self.pitch.to_radians().sin(),
+            -self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
+        )
+        .normalize()
     }
 
     pub fn set_position(&mut self, position: Vec3) {
         self.position = position;
-        self.update_camera_matrix();
+        // self.update_camera_matrix();
     }
 
     pub fn set_yaw(&mut self, yaw: f32) {
         self.yaw = yaw;
-        self.update_camera_matrix();
+        // self.update_camera_matrix();
     }
 
     pub fn set_pitch(&mut self, pitch: f32) {
         self.pitch = pitch.clamp(-89.9, 89.9);
-        self.update_camera_matrix();
+        // self.update_camera_matrix();
     }
 
-    pub fn set_bob(&mut self, bob: f32) {
-        self.roll = bob;
-        self.update_camera_matrix();
-    }
+    // pub fn set_bob(&mut self, bob: f32) {
+    //     self.roll = bob;
+    //     self.update_camera_matrix();
+    // }
 
     pub fn translate(&mut self, delta: Vec3) {
         self.position += delta;
-        self.update_camera_matrix();
+        // self.update_camera_matrix();
     }
 
     pub fn rotate(&mut self, delta_yaw: f32, delta_pitch: f32) {
         self.yaw += delta_yaw;
         self.pitch += delta_pitch;
         self.pitch = self.pitch.clamp(-89.9, 89.9);
-        self.update_camera_matrix();
+        // self.update_camera_matrix();
     }
 
-    #[inline]
-    fn update_camera_matrix(&mut self) {
-        self.direction = Vec3::new(
-            self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
-            self.pitch.to_radians().sin(),
-            self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
-        )
-        .normalize();
+    pub fn camera_matrix(&self) -> Mat4 {
+        let translation = glm::translation(&-self.position);
+        let rotation_yaw = glm::rotation(-self.yaw.to_radians(), &glm::vec3(0.0, 1.0, 0.0));
+        let rotation_pitch = glm::rotation(-self.pitch.to_radians(), &glm::vec3(1.0, 0.0, 0.0));
 
-        let view = glm::look_at(&self.position, &(self.position + self.direction), &Self::UP);
-        self.camera_matrix = self.projection_matrix * view;
+        self.projection_matrix * rotation_pitch * rotation_yaw * translation
     }
+
+    // #[inline]
+    // fn update_camera_matrix(&mut self) {
+    //     self.direction = Vec3::new(
+    //         self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
+    //         self.pitch.to_radians().sin(),
+    //         self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
+    //     )
+    //     .normalize();
+
+    //     let view = glm::look_at(&self.position, &(self.position + self.direction), &Self::UP);
+    //     self.camera_matrix = self.projection_matrix * view;
+    // }
 }
 
 impl From<CameraCreateInfo> for Camera {
@@ -130,17 +138,12 @@ impl From<CameraCreateInfo> for Camera {
             } => glm::ortho(left, right, bottom, top, near, far),
         };
 
-        let mut camera = Camera {
-            camera_matrix: Mat4::identity(),
-            direction: Vec3::new(0.0, 0.0, -1.0),
+        let camera = Camera {
             projection_matrix,
             position,
-            yaw: -90.0,
+            yaw: 0.0,
             pitch: 0.0,
-            roll: 0.0,
         };
-
-        camera.update_camera_matrix();
 
         camera
     }

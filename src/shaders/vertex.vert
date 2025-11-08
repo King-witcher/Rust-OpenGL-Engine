@@ -14,6 +14,6 @@ layout (location = 1) uniform mat4 camera;
 void main() {
     gl_Position = camera * model * vec4(in_position, 1.0);
     depth = gl_Position.z / gl_Position.w;
-    out_color = in_position;
+    out_color = in_color;
     out_uv = in_uv;
 }

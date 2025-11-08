@@ -63,14 +63,14 @@ impl KEngine {
 
         let main_texture = Texture::from(TextureCreateInfo {
             gl: gl.clone(),
-            rgba_image: load_image_from_archive(&archive, "bianca.png")?,
+            rgba_image: load_image_from_archive(&archive, "container2.png")?,
             internal_format: TextureFormat::RGBA,
             mip_level: 0,
             wrap_s: crate::texture::WrapMode::Repeat,
             wrap_t: crate::texture::WrapMode::Repeat,
-            min_filter: FilterMode::Nearest,
-            mag_filter: FilterMode::Linear,
-            mipmap_interpolation: Some(FilterMode::Nearest),
+            min_filter: FilterMode::Linear,
+            mag_filter: FilterMode::Nearest,
+            mipmap_interpolation: Some(FilterMode::Linear),
         });
         let main_texture = Rc::new(main_texture);
 
@@ -83,7 +83,7 @@ impl KEngine {
             },
             far: 1000.0,
             near: 0.1,
-            position: glm::vec3(0.0, 0.0, 4.0),
+            position: glm::vec3(0.0, 0.0, 0.0),
         });
 
         let scene = Scene::from(SceneCreateInfo {
@@ -142,12 +142,13 @@ impl KEngine {
         let camera = &mut self.scene.camera;
 
         let mouse_rel = input.mouse_rel();
-        let delta_yaw = mouse_rel.0 as f32 * 0.022 * 2.2;
+        let delta_yaw = -mouse_rel.0 as f32 * 0.022 * 2.2;
         let delta_pitch = -mouse_rel.1 as f32 * 0.022 * 2.2;
         let right = camera
             .direction()
             .cross(&glm::vec3(0.0, 1.0, 0.0))
             .normalize();
+
         camera.rotate(delta_yaw, delta_pitch);
 
         if input.is_key_down(Scancode::W) {
@@ -185,37 +186,37 @@ impl KEngine {
             },
             Vertex {
                 position: [-1.0, 1.0, 1.0],
-                color: [0.0, 1.0, 0.0],
+                color: [0.0, 1.0, 1.0],
                 tex_coords: [0.0, 0.0],
             },
             Vertex {
                 position: [1.0, 1.0, 1.0],
-                color: [0.0, 1.0, 1.0],
+                color: [1.0, 1.0, 1.0],
                 tex_coords: [1.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, 1.0],
-                color: [1.0, 0.0, 0.0],
+                color: [1.0, 0.0, 1.0],
                 tex_coords: [1.0, 1.0],
             },
             Vertex {
                 position: [-1.0, -1.0, -1.0],
-                color: [1.0, 0.0, 1.0],
+                color: [0.0, 0.0, 0.0],
                 tex_coords: [0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, -1.0],
-                color: [1.0, 1.0, 0.0],
+                color: [0.0, 1.0, 0.0],
                 tex_coords: [0.0, 1.0],
             },
             Vertex {
                 position: [1.0, 1.0, -1.0],
-                color: [1.0, 1.0, 1.0],
+                color: [1.0, 1.0, 0.0],
                 tex_coords: [1.0, 1.0],
             },
             Vertex {
                 position: [1.0, -1.0, -1.0],
-                color: [0.0, 0.0, 0.0],
+                color: [1.0, 0.0, 0.0],
                 tex_coords: [1.0, 0.0],
             },
         ];
@@ -239,11 +240,7 @@ impl KEngine {
             gl,
             vertices,
             polygons,
-            model_matrix: glm::rotate(
-                &Mat4::identity(),
-                45.0f32.to_radians(),
-                &glm::vec3(1.0, 0.0, 0.0),
-            ),
+            model_matrix: glm::identity(),
             shader_program,
             texture,
         };
