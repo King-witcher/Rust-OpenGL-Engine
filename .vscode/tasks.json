@@ -107,8 +107,8 @@
         "id": "debug"
       },
       "group": "build",
-      "dependsOrder": "parallel",
-      "dependsOn": ["shaders: compile all", "cargo build: debug"],
+      "dependsOrder": "sequence",
+      "dependsOn": ["slangc: compile", "cargo build: debug"],
     },
 
     {
@@ -118,8 +118,8 @@
         "id": "rocket"
       },
       "group": "build",
-      "dependsOrder": "parallel",
-      "dependsOn": ["shaders: compile all", "cargo build: release"],
+      "dependsOrder": "sequence",
+      "dependsOn": ["slangc: compile", "cargo build: release"],
     },
   ]
 }

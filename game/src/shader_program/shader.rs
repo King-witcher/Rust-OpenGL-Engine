@@ -1,8 +1,4 @@
-use std::ffi::CString;
-
-use gl46::GL_VERTEX_SHADER;
-
-use crate::gl;
+use gl;
 
 pub struct Shader {
     shader: gl::Shader,

@@ -1,7 +1,6 @@
 use crate::{
-    FilterMode, Texture, TextureCreateInfo, TextureFormat,
+    Texture, TextureCreateInfo,
     archive::EngineArchive,
-    gl::{self, Capability},
     scene::{
         Scene, SceneCreateInfo,
         camera::{Camera, CameraCreateInfo, CameraType},
@@ -11,6 +10,7 @@ use crate::{
     window,
 };
 use anyhow::{Result, anyhow};
+use gl::{self, Capability};
 use image::ImageBuffer;
 use nalgebra_glm::{self as glm};
 use sdl2::keyboard::Scancode;
@@ -45,13 +45,13 @@ impl KEngine {
 
         let main_texture = Texture::from(TextureCreateInfo {
             rgba_image: load_image_from_archive(&archive, "container2.png")?,
-            internal_format: TextureFormat::RGBA,
+            internal_format: gl::BaseInternalFormat::RGBA,
             mip_level: 0,
-            wrap_s: crate::texture::WrapMode::Repeat,
-            wrap_t: crate::texture::WrapMode::Repeat,
-            min_filter: FilterMode::Linear,
-            mag_filter: FilterMode::Nearest,
-            mipmap_interpolation: Some(FilterMode::Linear),
+            wrap_s: gl::TextureWrapMode::Repeat,
+            wrap_t: gl::TextureWrapMode::Repeat,
+            min_filter: gl::InterpolationMode::Linear,
+            mag_filter: gl::InterpolationMode::Nearest,
+            mipmap_interpolation: Some(gl::InterpolationMode::Linear),
         });
         let main_texture = Rc::new(main_texture);
 

@@ -1,5 +1,3 @@
-use std::ffi::c_void;
-
 use super::gl;
 pub struct Buffer(u32);
 

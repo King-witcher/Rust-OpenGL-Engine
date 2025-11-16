@@ -1,5 +1,5 @@
 use gl46;
-use std::ffi::{CStr, c_void};
+use std::ffi::{c_void, CStr};
 
 mod buffer;
 mod shader;
@@ -32,55 +32,44 @@ pub fn load_fns(loader: impl Fn(&str) -> *const c_void) -> Result<(), &'static s
 #[inline]
 #[allow(static_mut_refs)]
 pub fn gl() -> &'static gl46::GlFns {
-    unsafe { GL.as_ref().expect("OpenGL functions not initialized") }
+    unsafe {
+        if cfg!(debug_assertions) {
+            if GL.is_none() {
+                panic!("OpenGL functions not initialized. Did you forget to call gl::load_fns()?");
+            }
+        }
+        GL.as_ref().unwrap_unchecked()
+    }
 }
 
 pub unsafe fn viewport(x: i32, y: i32, width: i32, height: i32) {
     unsafe { gl().Viewport(x, y, width, height) }
 }
 
-pub fn tex_parameter_i(target: TextureTarget, pname: impl Into<u32>, param: impl Into<i32>) {
-    unsafe {
-        gl().TexParameteri(target.into(), gl46::GLenum(pname.into()), param.into());
-    }
-}
-
-pub fn tex_image_2d(
-    target: TextureTarget,
-    level: i32,
-    internal_format: impl Into<i32>,
-    width: i32,
-    height: i32,
-    format: impl Into<u32>,
-    type_: impl Into<u32>,
-    data: &[u8],
-) {
-    unsafe {
-        gl().TexImage2D(
-            target.into(),
-            level,
-            internal_format.into(),
-            width,
-            height,
-            0,
-            gl46::GLenum(format.into()),
-            gl46::GLenum(type_.into()),
-            data.as_ptr().cast(),
-        );
-    }
-}
-
-pub fn generate_mipmap(target: TextureTarget) {
-    unsafe {
-        gl().GenerateMipmap(target.into());
-    }
-}
-
-pub fn active_texture(texture_unit: u32) {
-    unsafe {
-        gl().ActiveTexture(gl46::GLenum(texture_unit));
-    }
-}
+// pub fn tex_image_2d(
+//     target: TextureTarget,
+//     level: i32,
+//     internal_format: impl Into<i32>,
+//     width: i32,
+//     height: i32,
+//     format: impl Into<u32>,
+//     type_: impl Into<u32>,
+//     data: &[u8],
+// ) {
+//     unsafe {
+//         gl().TexImage2D(
+//             target.into(),
+//             level,
+//             internal_format.into(),
+//             width,
+//             height,
+//             0,
+//             gl46::GLenum(format.into()),
+//             gl46::GLenum(type_.into()),
+//             data.as_ptr().cast(),
+//         );
+//     }
+// }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

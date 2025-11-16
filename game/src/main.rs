@@ -1,10 +1,8 @@
 extern crate anyhow;
-extern crate gl46;
 extern crate sdl2;
 
 mod archive;
 mod engine;
-mod gl;
 mod scene;
 mod shader_program;
 mod texture;

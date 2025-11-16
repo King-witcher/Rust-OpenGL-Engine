@@ -1,7 +1,8 @@
 mod shader;
 
+use crate::shader_program::shader::Shader;
 pub use crate::shader_program::shader::ShaderCode;
-use crate::{gl, shader_program::shader::Shader};
+use gl;
 use nalgebra_glm::Mat4;
 
 pub struct ShaderProgram {

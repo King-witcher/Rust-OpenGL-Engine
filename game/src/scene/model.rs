@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::gl;
+use gl;
 use nalgebra_glm::Mat4;
 
 use crate::{Texture, scene::camera::Camera, shader_program::ShaderProgram};
