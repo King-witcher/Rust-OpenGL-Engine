@@ -1,7 +1,11 @@
-use crate::mygl;
+use std::ffi::CString;
+
+use gl46::GL_VERTEX_SHADER;
+
+use crate::gl;
 
 pub struct Shader {
-    shader: mygl::Shader,
+    shader: gl::Shader,
 }
 
 #[repr(u8)]
@@ -17,29 +21,30 @@ pub enum ShaderCode<'a> {
 }
 
 impl Shader {
-    pub fn new(code: ShaderCode, shader_type: mygl::ShaderType) -> Result<Self, String> {
+    pub fn new(code: ShaderCode, shader_type: gl::ShaderType) -> Result<Self, String> {
         match code {
             ShaderCode::GLSL(source) => Self::from_glsl(source, shader_type),
             ShaderCode::SPIRV(binary) => Self::from_spirv(binary, shader_type),
         }
     }
 
-    pub fn from_glsl(source: &str, shader_type: mygl::ShaderType) -> Result<Self, String> {
-        let mut shader = mygl::Shader::create(shader_type);
+    pub fn from_glsl(source: &str, shader_type: gl::ShaderType) -> Result<Self, String> {
+        let mut shader = gl::Shader::create(shader_type);
         shader.source(&[source]);
         shader.compile()?;
+
         Ok(Self { shader })
     }
 
-    pub fn from_spirv(binary: &[u8], shader_type: mygl::ShaderType) -> Result<Self, String> {
-        let mut shader = mygl::Shader::create(shader_type);
+    pub fn from_spirv(binary: &[u8], shader_type: gl::ShaderType) -> Result<Self, String> {
+        let mut shader = gl::Shader::create(shader_type);
         shader.binary(binary);
         shader.specialize("main", &[])?;
 
         unimplemented!("SPIR-V shader creation is not implemented yet.");
     }
 
-    pub fn shader(&self) -> &mygl::Shader {
+    pub fn shader(&self) -> &gl::Shader {
         &self.shader
     }
 
@@ -49,13 +54,13 @@ impl Shader {
     }
 }
 
-impl From<mygl::Shader> for Shader {
-    fn from(shader: mygl::Shader) -> Self {
+impl From<gl::Shader> for Shader {
+    fn from(shader: gl::Shader) -> Self {
         Self { shader }
     }
 }
 
-impl From<Shader> for mygl::Shader {
+impl From<Shader> for gl::Shader {
     fn from(shader: Shader) -> Self {
         shader.shader
     }

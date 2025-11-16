@@ -31,20 +31,14 @@ impl Shader {
 
     pub fn source(&mut self, strings: &[&str]) {
         let lengths: Vec<_> = strings.iter().map(|s| s.len()).collect();
-        let c_strings: Vec<_> = strings
-            .iter()
-            .map(|s| {
-                let cstr = CString::new(*s).expect("Illegal null byte inside shader source.");
-                cstr.as_ptr() as *const u8
-            })
-            .collect();
+        let c_strings: Vec<_> = strings.iter().map(|s| s.as_ptr() as *const u8).collect();
 
         unsafe {
             gl().ShaderSource(
                 self.id(),
-                c_strings.len() as _,
+                c_strings.len() as i32,
                 c_strings.as_ptr(),
-                lengths.as_ptr() as _,
+                lengths.as_ptr() as *const i32,
             )
         };
     }
@@ -124,11 +118,18 @@ impl Shader {
 
     #[inline]
     pub fn get_info_log(&self) -> String {
+        const BUFFER_SIZE: usize = 1024;
         let gl = gl();
         let mut len = 0;
-        unsafe { gl.GetShaderInfoLog(self.id(), 0, &mut len, std::ptr::null_mut()) };
-        let mut buffer = vec![0u8; len as usize];
-        unsafe { gl.GetShaderInfoLog(self.id(), len, &mut len, buffer.as_mut_ptr()) };
+        let mut buffer = [0u8; BUFFER_SIZE];
+        unsafe {
+            gl.GetShaderInfoLog(
+                self.id(),
+                BUFFER_SIZE as i32,
+                &mut len,
+                &mut buffer as *mut _,
+            )
+        };
         String::from_utf8_lossy(&buffer[..len as usize]).to_string()
     }
 

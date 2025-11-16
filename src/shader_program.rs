@@ -1,20 +1,19 @@
 mod shader;
 
 pub use crate::shader_program::shader::ShaderCode;
-use crate::{mygl, shader_program::shader::Shader};
+use crate::{gl, shader_program::shader::Shader};
 use nalgebra_glm::Mat4;
-pub use shader::ShaderSourceType;
 
 pub struct ShaderProgram {
-    program: mygl::ShaderProgram,
+    program: gl::ShaderProgram,
 }
 
 impl ShaderProgram {
     pub fn new(vertex: ShaderCode, fragment: ShaderCode) -> Result<Self, String> {
-        let vertex_shader = Shader::new(vertex, mygl::ShaderType::Vertex)?;
-        let fragment_shader = Shader::new(fragment, mygl::ShaderType::Fragment)?;
+        let vertex_shader = Shader::new(vertex, gl::ShaderType::Vertex)?;
+        let fragment_shader = Shader::new(fragment, gl::ShaderType::Fragment)?;
 
-        let mut program = mygl::ShaderProgram::create();
+        let mut program = gl::ShaderProgram::create();
 
         program.attach_shader(vertex_shader.into());
         program.attach_shader(fragment_shader.into());

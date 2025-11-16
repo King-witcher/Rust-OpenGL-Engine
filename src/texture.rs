@@ -1,4 +1,4 @@
-use crate::mygl;
+use crate::gl;
 
 use gl46::*;
 use image::{EncodableLayout, RgbaImage};
@@ -6,7 +6,7 @@ use image::{EncodableLayout, RgbaImage};
 pub struct Texture {
     width: i32,
     height: i32,
-    texture: mygl::Texture,
+    texture: gl::Texture,
 }
 
 #[repr(u32)]
@@ -57,25 +57,25 @@ impl From<TextureCreateInfo> for Texture {
             mipmap_interpolation,
         } = info;
 
-        const TARGET: mygl::TextureTarget = mygl::TextureTarget::Texture2D;
+        const TARGET: gl::TextureTarget = gl::TextureTarget::Texture2D;
 
-        let texture = mygl::Texture::gen1();
+        let texture = gl::Texture::gen1();
         texture.bind(TARGET);
-        mygl::tex_parameter_i(TARGET, GL_TEXTURE_WRAP_S.0, wrap_s as i32);
-        mygl::tex_parameter_i(TARGET, GL_TEXTURE_WRAP_S.0, wrap_s as i32);
-        mygl::tex_parameter_i(TARGET, GL_TEXTURE_WRAP_T.0, wrap_t as i32);
-        mygl::tex_parameter_i(TARGET, GL_TEXTURE_MAG_FILTER.0, mag_filter as i32);
+        gl::tex_parameter_i(TARGET, GL_TEXTURE_WRAP_S.0, wrap_s as i32);
+        gl::tex_parameter_i(TARGET, GL_TEXTURE_WRAP_S.0, wrap_s as i32);
+        gl::tex_parameter_i(TARGET, GL_TEXTURE_WRAP_T.0, wrap_t as i32);
+        gl::tex_parameter_i(TARGET, GL_TEXTURE_MAG_FILTER.0, mag_filter as i32);
 
         match mipmap_interpolation {
             Some(FilterMode::Nearest) => {
                 if matches!(min_filter, FilterMode::Nearest) {
-                    mygl::tex_parameter_i(
+                    gl::tex_parameter_i(
                         TARGET,
                         GL_TEXTURE_MIN_FILTER.0,
                         GL_NEAREST_MIPMAP_NEAREST.0 as i32,
                     );
                 } else {
-                    mygl::tex_parameter_i(
+                    gl::tex_parameter_i(
                         TARGET,
                         GL_TEXTURE_MIN_FILTER.0,
                         GL_LINEAR_MIPMAP_NEAREST.0 as i32,
@@ -84,13 +84,13 @@ impl From<TextureCreateInfo> for Texture {
             }
             Some(FilterMode::Linear) => {
                 if matches!(min_filter, FilterMode::Nearest) {
-                    mygl::tex_parameter_i(
+                    gl::tex_parameter_i(
                         TARGET,
                         GL_TEXTURE_MIN_FILTER.0,
                         GL_NEAREST_MIPMAP_LINEAR.0 as i32,
                     );
                 } else {
-                    mygl::tex_parameter_i(
+                    gl::tex_parameter_i(
                         TARGET,
                         GL_TEXTURE_MIN_FILTER.0,
                         GL_LINEAR_MIPMAP_LINEAR.0 as i32,
@@ -98,11 +98,11 @@ impl From<TextureCreateInfo> for Texture {
                 }
             }
             None => {
-                mygl::tex_parameter_i(TARGET, GL_TEXTURE_MIN_FILTER.0, min_filter as i32);
+                gl::tex_parameter_i(TARGET, GL_TEXTURE_MIN_FILTER.0, min_filter as i32);
             }
         }
 
-        mygl::tex_image_2d(
+        gl::tex_image_2d(
             TARGET,
             mip_level,
             internal_format as i32,
@@ -113,7 +113,7 @@ impl From<TextureCreateInfo> for Texture {
             rgba_image.as_bytes(),
         );
 
-        mygl::generate_mipmap(TARGET);
+        gl::generate_mipmap(TARGET);
 
         Texture {
             width: rgba_image.width() as _,
@@ -127,8 +127,8 @@ impl Texture {
     pub fn bind_to_unit(&self, unit: u32) {
         let texture_unit = GL_TEXTURE0.0 + unit;
         let texture_unit = GLenum(texture_unit);
-        mygl::active_texture(texture_unit.0);
-        self.texture.bind(mygl::TextureTarget::Texture2D);
+        gl::active_texture(texture_unit.0);
+        self.texture.bind(gl::TextureTarget::Texture2D);
     }
 
     pub fn id(&self) -> u32 {

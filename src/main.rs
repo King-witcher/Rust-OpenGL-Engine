@@ -4,7 +4,7 @@ extern crate sdl2;
 
 mod archive;
 mod engine;
-mod mygl;
+mod gl;
 mod scene;
 mod shader_program;
 mod texture;
@@ -12,7 +12,9 @@ mod window;
 
 pub use texture::*;
 
-fn main() {
-    let mut engine = engine::KEngine::new(1920, 1080, "Rust OpenGL Window").unwrap();
+fn main() -> anyhow::Result<()> {
+    let mut engine = engine::KEngine::new(1920, 1080, "Rust OpenGL Window")?;
     engine.run();
+
+    Ok(())
 }

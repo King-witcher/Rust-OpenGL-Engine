@@ -1,7 +1,7 @@
 use crate::{
     FilterMode, Texture, TextureCreateInfo, TextureFormat,
     archive::EngineArchive,
-    mygl,
+    gl::{self, Capability},
     scene::{
         Scene, SceneCreateInfo,
         camera::{Camera, CameraCreateInfo, CameraType},
@@ -11,7 +11,6 @@ use crate::{
     window,
 };
 use anyhow::{Result, anyhow};
-use gl46::*;
 use image::ImageBuffer;
 use nalgebra_glm::{self as glm};
 use sdl2::keyboard::Scancode;
@@ -22,7 +21,6 @@ pub mod input;
 pub struct KEngine {
     window: window::KWindow,
     archive: EngineArchive,
-    gl: Rc<GlFns>,
     scene: Scene,
 }
 
@@ -34,10 +32,10 @@ impl KEngine {
             height,
         });
 
-        mygl::load_fns(|s| window.get_proc_address(s)).unwrap();
+        gl::load_fns(|s| window.get_proc_address(s)).unwrap();
 
         unsafe {
-            mygl::viewport(0, 0, width as i32, height as i32);
+            gl::viewport(0, 0, width as i32, height as i32);
         }
 
         let archive = EngineArchive::new("base").expect("Failed to load base archive");
@@ -57,7 +55,7 @@ impl KEngine {
         });
         let main_texture = Rc::new(main_texture);
 
-        let model = Self::load_cube(gl.clone(), shader_program.clone(), main_texture.clone());
+        let model = Self::load_cube(shader_program.clone(), main_texture.clone());
 
         let camera = Camera::from(CameraCreateInfo {
             camera_type: CameraType::Perspective {
@@ -75,7 +73,6 @@ impl KEngine {
         });
 
         Ok(KEngine {
-            gl,
             archive,
             window,
             scene,
@@ -83,36 +80,34 @@ impl KEngine {
     }
 
     pub fn run(&mut self) {
-        unsafe {
-            // self.gl.ClearColor(0.05, 0.05, 0.05, 1.0);
-            self.gl.Enable(GL_DEPTH_TEST);
-            self.gl.Enable(GL_BLEND);
-            self.gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        gl::clear_color(0.05, 0.05, 0.05, 1.0);
+        gl::enable(Capability::DepthTest);
+        gl::enable(Capability::Blend);
+        gl::blend_func(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
 
-            self.window.set_relative_mouse_mode(true);
+        self.window.set_relative_mouse_mode(true);
 
-            let mut input = input::Input::new();
-            let mut event_pump = self.window.event_pump();
+        let mut input = input::Input::new();
+        let mut event_pump = self.window.event_pump();
 
-            let mut last_frame = Instant::now();
-            let mut delta_time;
-            loop {
-                self.draw_frame();
+        let mut last_frame = Instant::now();
+        let mut delta_time;
+        loop {
+            self.draw_frame();
 
-                let events = event_pump.poll_iter();
-                input.update(events);
-                if input.exit {
-                    break;
-                }
+            let events = event_pump.poll_iter();
+            input.update(events);
+            if input.exit {
+                break;
+            }
 
-                delta_time = last_frame.elapsed().as_secs_f32();
-                last_frame = Instant::now();
+            delta_time = last_frame.elapsed().as_secs_f32();
+            last_frame = Instant::now();
 
-                self.process_input(&mut input, delta_time);
+            self.process_input(&mut input, delta_time);
 
-                if input.exit {
-                    break;
-                }
+            if input.exit {
+                break;
             }
         }
     }
@@ -160,15 +155,13 @@ impl KEngine {
     }
 
     fn draw_frame(&self) {
-        unsafe {
-            self.gl.Clear(GL_COLOR_BUFFER_BIT);
-            self.gl.Clear(GL_DEPTH_BUFFER_BIT);
-            self.scene.render();
-            self.window.swap_window();
-        }
+        gl::clear(gl::ClearMask::ColorBufferBit);
+        gl::clear(gl::ClearMask::DepthBufferBit);
+        self.scene.render();
+        self.window.swap_window();
     }
 
-    fn load_cube(gl: Rc<GlFns>, shader_program: Rc<ShaderProgram>, texture: Rc<Texture>) -> Model {
+    fn load_cube(shader_program: Rc<ShaderProgram>, texture: Rc<Texture>) -> Model {
         let vertices = vec![
             Vertex {
                 position: [-1.0, -1.0, 1.0],
@@ -228,7 +221,6 @@ impl KEngine {
         ];
 
         let create_info = ModelCreateInfo {
-            gl,
             vertices,
             polygons,
             model_matrix: glm::identity(),
@@ -241,13 +233,10 @@ impl KEngine {
 }
 
 fn create_shader_program() -> Result<ShaderProgram, String> {
-    let vertex_binary = include_bytes!("../base/shaders/vertex.vert.spv");
-    let fragment_binary = include_bytes!("../base/shaders/fragment.frag.spv");
+    let vertex = include_str!("shaders/vertex.vert");
+    let fragment = include_str!("shaders/fragment.frag");
 
-    ShaderProgram::new(
-        ShaderCode::SPIRV(vertex_binary),
-        ShaderCode::SPIRV(fragment_binary),
-    )
+    ShaderProgram::new(ShaderCode::GLSL(vertex), ShaderCode::GLSL(fragment))
 }
 
 fn load_image_from_archive(
