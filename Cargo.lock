@@ -425,6 +425,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "game"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "gl",
+ "image",
+ "nalgebra-glm",
+ "sdl2",
+ "thiserror 2.0.17",
+ "zip",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -465,6 +478,14 @@ checksum = "4ae047235e33e2829703574b54fdec96bfbad892062d97fed2f76022287de61b"
 dependencies = [
  "color_quant",
  "weezl",
+]
+
+[[package]]
+name = "gl"
+version = "0.1.0"
+dependencies = [
+ "gl46",
+ "nalgebra-glm",
 ]
 
 [[package]]
@@ -1176,19 +1197,6 @@ name = "rgb"
 version = "0.8.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c6a884d2998352bb4daf0183589aec883f16a6da1f4dde84d8e2e9a5409a1ce"
-
-[[package]]
-name = "rust-opengl"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "gl46",
- "image",
- "nalgebra-glm",
- "sdl2",
- "thiserror 2.0.17",
- "zip",
-]
 
 [[package]]
 name = "rustversion"
