@@ -173,6 +173,13 @@ impl Texture {
             gl().BindTexture(target.into(), self.0);
         }
     }
+
+    #[inline]
+    pub fn bind_texture_unit(&self, unit: u32) {
+        unsafe {
+            gl().BindTextureUnit(unit, self.0);
+        }
+    }
 }
 
 impl Drop for Texture {

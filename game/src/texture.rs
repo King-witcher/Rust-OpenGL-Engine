@@ -60,8 +60,7 @@ impl From<TextureCreateInfo> for Texture {
 
 impl Texture {
     pub fn bind_to_unit(&self, unit: u32) {
-        gl::active_texture_gl_texture(unit);
-        self.texture.bind(gl::TextureTarget::Texture2D);
+        self.texture.bind_texture_unit(unit);
     }
 
     pub fn id(&self) -> u32 {
