@@ -1,5 +1,10 @@
 # !/bin/sh
 
+GREEN="\e[1;32m"
+RED="\e[0;31m"
+PURPLE="\e[0;35m"
+NC="\e[0m"
+
 # Remove existing .spv files
 spvs=$(find . -name '*.spv')
 for spv in $spvs; do
@@ -18,16 +23,18 @@ function compile {
     -profile spirv_1_4       \
     -emit-spirv-directly     \
     -fvk-use-entrypoint-name \
-    -entry vertMain          \
-    -entry fragMain          \
+    -entry main              \
     -o "$dir/$basename.spv"
 
   if [ $? -eq 0 ]; then
-    echo "Compiled $file_path to $dir/$basename.spv"
+    echo -e "${GREEN}[SUCCESS]${NC} $file_path -> ${PURPLE}$basename.spv${NC}"
+  else
+    echo -e "${RED}[FAILED]${NC} $file_path${NC}"
   fi
 }
 
 # Compile .slang files to .spv
+echo -e "${PURPLE}Compiling .slang files to .spv...${NC}"
 shaders=$(find . -name '*.slang')
 for shader in $shaders; do
   compile $shader

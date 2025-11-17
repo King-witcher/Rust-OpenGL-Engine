@@ -80,10 +80,8 @@ impl KEngine {
     }
 
     pub fn run(&mut self) {
-        gl::clear_color(0.05, 0.05, 0.05, 1.0);
+        gl::clear_color(0.1, 0.1, 0.1, 1.0);
         gl::enable(Capability::DepthTest);
-        gl::enable(Capability::Blend);
-        gl::blend_func(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
 
         self.window.set_relative_mouse_mode(true);
 
@@ -233,10 +231,10 @@ impl KEngine {
 }
 
 fn create_shader_program() -> Result<ShaderProgram, String> {
-    let vertex = include_str!("shaders/vertex.vert");
-    let fragment = include_str!("shaders/fragment.frag");
+    let vertex = include_bytes!("shaders/vertex.spv");
+    let fragment = include_bytes!("shaders/fragment.spv");
 
-    ShaderProgram::new(ShaderCode::GLSL(vertex), ShaderCode::GLSL(fragment))
+    ShaderProgram::new(ShaderCode::SPIRV(vertex), ShaderCode::SPIRV(fragment))
 }
 
 fn load_image_from_archive(

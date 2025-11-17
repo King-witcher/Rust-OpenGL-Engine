@@ -46,31 +46,6 @@ pub unsafe fn viewport(x: i32, y: i32, width: i32, height: i32) {
     unsafe { gl().Viewport(x, y, width, height) }
 }
 
-// pub fn tex_image_2d(
-//     target: TextureTarget,
-//     level: i32,
-//     internal_format: impl Into<i32>,
-//     width: i32,
-//     height: i32,
-//     format: impl Into<u32>,
-//     type_: impl Into<u32>,
-//     data: &[u8],
-// ) {
-//     unsafe {
-//         gl().TexImage2D(
-//             target.into(),
-//             level,
-//             internal_format.into(),
-//             width,
-//             height,
-//             0,
-//             gl46::GLenum(format.into()),
-//             gl46::GLenum(type_.into()),
-//             data.as_ptr().cast(),
-//         );
-//     }
-// }
-
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Capability {

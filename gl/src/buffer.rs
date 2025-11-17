@@ -55,6 +55,20 @@ impl Buffer {
     }
 
     #[inline]
+    pub fn named_buffer_storage<T>(&self, data: Vec<T>, flags: BufferUsage) {
+        let size = data.len() * size_of::<T>();
+        let data_ptr = data.as_ptr().cast();
+        unsafe {
+            gl().NamedBufferStorage(
+                self.id(),
+                size as isize,
+                data_ptr,
+                gl46::GLbitfield(flags as u32),
+            );
+        }
+    }
+
+    #[inline]
     pub fn delete(self) {}
 }
 

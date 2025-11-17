@@ -1,10 +1,8 @@
-use gl;
+use gl::{self, TextureTarget};
 
 use image::RgbaImage;
 
 pub struct Texture {
-    width: i32,
-    height: i32,
     texture: gl::Texture,
 }
 
@@ -32,35 +30,31 @@ impl From<TextureCreateInfo> for Texture {
             mipmap_interpolation,
         } = info;
 
-        const TARGET: gl::TextureTarget = gl::TextureTarget::Texture2D;
+        let mut texture = gl::Texture::create1(TextureTarget::Texture2D);
+        texture.parameter_i_wrap_s(wrap_s);
+        texture.parameter_i_wrap_t(wrap_t);
+        texture.parameter_i_mag_filter(mag_filter);
+        texture.parameter_i_min_filter(min_filter, mipmap_interpolation);
 
-        let texture = gl::Texture::gen1();
-        texture.bind(TARGET);
-        gl::tex_parameter_i_wrap_s(TARGET, wrap_s);
-        gl::tex_parameter_i_wrap_t(TARGET, wrap_t);
-        gl::tex_parameter_i_mag_filter(TARGET, mag_filter);
-        gl::tex_parameter_i_min_filter(TARGET, min_filter, mipmap_interpolation);
+        texture.storage_2d(
+            1,
+            internal_format,
+            rgba_image.width() as i32,
+            rgba_image.height() as i32,
+        );
 
-        unsafe {
-            gl::tex_image_2d(
-                TARGET,
-                mip_level,
-                internal_format,
-                rgba_image.width() as i32,
-                rgba_image.height() as i32,
-                gl::PixelDataFormat::RGBA,
-                gl::PixelDataType::UnsignedByte,
-                rgba_image.as_ptr(),
-            )
-        };
+        texture.sub_image_2d(
+            mip_level,
+            (0, 0),
+            (rgba_image.width() as i32, rgba_image.height() as i32),
+            gl::PixelDataFormat::RGBA,
+            gl::PixelDataType::UnsignedByte,
+            rgba_image.as_ptr(),
+        );
 
-        gl::generate_mipmap(TARGET);
+        texture.generate_mipmap();
 
-        Texture {
-            width: rgba_image.width() as _,
-            height: rgba_image.height() as _,
-            texture,
-        }
+        Texture { texture }
     }
 }
 

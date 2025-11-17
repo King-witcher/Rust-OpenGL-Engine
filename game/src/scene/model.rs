@@ -67,17 +67,20 @@ impl Model {
         vbo.bind(gl::BufferTarget::ArrayBuffer);
         ebo.bind(gl::BufferTarget::ElementArrayBuffer);
 
-        gl::buffer_data(
-            gl::BufferTarget::ArrayBuffer,
-            vertices,
-            gl::BufferUsage::StaticDraw,
-        );
+        vbo.named_buffer_storage(vertices, gl::BufferUsage::StaticDraw);
+        ebo.named_buffer_storage(polygons, gl::BufferUsage::StaticDraw);
 
-        gl::buffer_data(
-            gl::BufferTarget::ElementArrayBuffer,
-            polygons,
-            gl::BufferUsage::StaticDraw,
-        );
+        // gl::buffer_data(
+        //     gl::BufferTarget::ArrayBuffer,
+        //     vertices,
+        //     gl::BufferUsage::StaticDraw,
+        // );
+
+        // gl::buffer_data(
+        //     gl::BufferTarget::ElementArrayBuffer,
+        //     polygons,
+        //     gl::BufferUsage::StaticDraw,
+        // );
 
         let attribute_descriptions = Self::default_attribute_descriptions();
 

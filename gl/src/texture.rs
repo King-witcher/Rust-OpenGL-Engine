@@ -35,12 +35,136 @@ impl Texture {
     }
 
     #[inline]
+    pub fn create(target: TextureTarget, count: isize) -> Vec<Self> {
+        let mut textures = vec![0; count as usize];
+        unsafe {
+            gl().CreateTextures(target.into(), count as _, textures.as_mut_ptr());
+        }
+        textures.into_iter().map(Texture).collect()
+    }
+
+    #[inline]
+    pub fn create1(target: TextureTarget) -> Self {
+        let mut texture = 0;
+        unsafe {
+            gl().CreateTextures(target.into(), 1, &mut texture);
+        }
+        Texture(texture)
+    }
+
+    #[inline]
     pub fn gen1() -> Self {
         let mut texture = 0;
         unsafe {
             gl().GenTextures(1, &mut texture);
         }
         Texture(texture)
+    }
+
+    #[inline]
+    pub unsafe fn parameter_i(&mut self, pname: TextureParameter, param: i32) {
+        unsafe {
+            gl().TextureParameteri(self.id(), pname.into(), param);
+        }
+    }
+
+    #[inline]
+    pub fn parameter_i_wrap_r(&mut self, wrap_mode: TextureWrapMode) {
+        unsafe {
+            self.parameter_i(TextureParameter::TextureWrapR, wrap_mode as i32);
+        }
+    }
+
+    #[inline]
+    pub fn parameter_i_wrap_s(&mut self, wrap_mode: TextureWrapMode) {
+        unsafe {
+            self.parameter_i(TextureParameter::TextureWrapS, wrap_mode as i32);
+        }
+    }
+
+    #[inline]
+    pub fn parameter_i_wrap_t(&mut self, wrap_mode: TextureWrapMode) {
+        unsafe {
+            self.parameter_i(TextureParameter::TextureWrapT, wrap_mode as i32);
+        }
+    }
+
+    #[inline]
+    pub fn parameter_i_mag_filter(&mut self, filter_mode: InterpolationMode) {
+        unsafe {
+            self.parameter_i(TextureParameter::TextureMagFilter, filter_mode as i32);
+        }
+    }
+
+    #[inline]
+    pub fn parameter_i_min_filter(
+        &mut self,
+        texture_filter_mode: InterpolationMode,
+        mipmap_interpolation: Option<InterpolationMode>,
+    ) {
+        unsafe {
+            let filter_mode = match mipmap_interpolation {
+                Some(InterpolationMode::Nearest) => match texture_filter_mode {
+                    InterpolationMode::Nearest => gl46::GL_NEAREST_MIPMAP_NEAREST,
+                    InterpolationMode::Linear => gl46::GL_LINEAR_MIPMAP_NEAREST,
+                },
+                Some(InterpolationMode::Linear) => match texture_filter_mode {
+                    InterpolationMode::Nearest => gl46::GL_NEAREST_MIPMAP_LINEAR,
+                    InterpolationMode::Linear => gl46::GL_LINEAR_MIPMAP_LINEAR,
+                },
+                None => match texture_filter_mode {
+                    InterpolationMode::Nearest => gl46::GL_NEAREST,
+                    InterpolationMode::Linear => gl46::GL_LINEAR,
+                },
+            };
+
+            self.parameter_i(TextureParameter::TextureMinFilter, filter_mode.0 as i32);
+        }
+    }
+
+    #[inline]
+    pub fn storage_2d(
+        &mut self,
+        levels: i32,
+        internal_format: BaseInternalFormat,
+        width: i32,
+        height: i32,
+    ) {
+        unsafe {
+            gl().TextureStorage2D(self.id(), levels, internal_format.into(), width, height);
+        }
+    }
+
+    #[inline]
+    pub fn sub_image_2d<T>(
+        &mut self,
+        level: i32,
+        (xoffset, yoffset): (i32, i32),
+        (width, height): (i32, i32),
+        format: PixelDataFormat,
+        r#type: PixelDataType,
+        data: *const T,
+    ) {
+        unsafe {
+            gl().TextureSubImage2D(
+                self.id(),
+                level,
+                xoffset,
+                yoffset,
+                width,
+                height,
+                format.into(),
+                r#type.into(),
+                data.cast(),
+            );
+        }
+    }
+
+    #[inline]
+    pub fn generate_mipmap(&mut self) {
+        unsafe {
+            gl().GenerateTextureMipmap(self.id());
+        }
     }
 
     #[inline]
@@ -202,6 +326,13 @@ pub enum PixelDataFormat {
     DepthStencil = gl46::GL_DEPTH_STENCIL.0,
 }
 
+impl From<PixelDataFormat> for GLenum {
+    #[inline]
+    fn from(value: PixelDataFormat) -> Self {
+        GLenum(value as _)
+    }
+}
+
 #[repr(u32)]
 #[derive(Clone, Copy)]
 pub enum BaseInternalFormat {
@@ -211,6 +342,13 @@ pub enum BaseInternalFormat {
     RG = gl46::GL_RG.0,
     RGB = gl46::GL_RGB.0,
     RGBA = gl46::GL_RGBA.0,
+}
+
+impl From<BaseInternalFormat> for GLenum {
+    #[inline]
+    fn from(value: BaseInternalFormat) -> Self {
+        GLenum(value as _)
+    }
 }
 
 #[repr(u32)]
@@ -236,6 +374,13 @@ pub enum PixelDataType {
     UnsignedInt8888Rev = gl46::GL_UNSIGNED_INT_8_8_8_8_REV.0,
     UnsignedInt1010102 = gl46::GL_UNSIGNED_INT_10_10_10_2.0,
     UnsignedInt2101010Rev = gl46::GL_UNSIGNED_INT_2_10_10_10_REV.0,
+}
+
+impl From<PixelDataType> for GLenum {
+    #[inline]
+    fn from(value: PixelDataType) -> Self {
+        GLenum(value as _)
+    }
 }
 
 #[inline]
