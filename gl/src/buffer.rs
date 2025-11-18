@@ -7,6 +7,17 @@ pub enum BufferTarget {
     ElementArrayBuffer = gl46::GL_ELEMENT_ARRAY_BUFFER.0,
 }
 
+#[repr(u32)]
+#[derive(Clone, Copy)]
+pub enum BufferStorageFlag {
+    DynamicStorage = gl46::GL_DYNAMIC_STORAGE_BIT.0,
+    MapRead = gl46::GL_MAP_READ_BIT.0,
+    MapWrite = gl46::GL_MAP_WRITE_BIT.0,
+    MapPersistent = gl46::GL_MAP_PERSISTENT_BIT.0,
+    MapCoherent = gl46::GL_MAP_COHERENT_BIT.0,
+    ClientStorage = gl46::GL_CLIENT_STORAGE_BIT.0,
+}
+
 impl From<BufferTarget> for u32 {
     fn from(target: BufferTarget) -> Self {
         target as u32
@@ -43,6 +54,24 @@ impl Buffer {
     }
 
     #[inline]
+    pub fn create(n: isize) -> Vec<Self> {
+        let mut buffers = vec![0; n as usize];
+        unsafe {
+            gl().CreateBuffers(n as _, buffers.as_mut_ptr());
+        }
+        buffers.into_iter().map(Buffer).collect()
+    }
+
+    #[inline]
+    pub fn create1() -> Self {
+        let mut buffer = 0;
+        unsafe {
+            gl().CreateBuffers(1, &mut buffer);
+        }
+        Buffer(buffer)
+    }
+
+    #[inline]
     pub fn id(&self) -> u32 {
         self.0
     }
@@ -55,7 +84,7 @@ impl Buffer {
     }
 
     #[inline]
-    pub fn storage<T>(&mut self, data: Vec<T>, flags: BufferUsage) {
+    pub fn storage<T>(&mut self, data: Vec<T>, flags: BufferStorageFlag) {
         let size = data.len() * size_of::<T>();
         let data_ptr = data.as_ptr().cast();
         unsafe {

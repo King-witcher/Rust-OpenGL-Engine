@@ -1,5 +1,7 @@
 use std::ffi::c_void;
 
+use gl46::GLenum;
+
 use super::gl;
 pub struct VertexArray(u32);
 
@@ -51,6 +53,32 @@ impl VertexArray {
     }
 
     #[inline]
+    pub fn vertex_buffer(
+        &mut self,
+        binding: u32,
+        buffer: &crate::Buffer,
+        offset: isize,
+        stride: usize,
+    ) {
+        unsafe {
+            gl().VertexArrayVertexBuffer(self.id(), binding, buffer.id(), offset, stride as i32);
+        }
+    }
+
+    #[inline]
+    pub fn element_buffer(&mut self, buffer: &crate::Buffer) {
+        unsafe {
+            gl().VertexArrayElementBuffer(self.id(), buffer.id());
+        }
+    }
+
+    pub fn attrib_binding(&self, attribindex: u32, bindingindex: u32) {
+        unsafe {
+            gl().VertexArrayAttribBinding(self.id(), attribindex, bindingindex);
+        }
+    }
+
+    #[inline]
     pub fn bind(&self) {
         gl().BindVertexArray(self.id());
     }
@@ -59,6 +87,27 @@ impl VertexArray {
     pub fn enable_attrib(&mut self, index: u32) {
         unsafe {
             gl().EnableVertexArrayAttrib(self.id(), index);
+        }
+    }
+
+    #[inline]
+    pub fn attrib_format(
+        &mut self,
+        attrib_index: u32,
+        size: i32,
+        r#type: VertexAttribPointerType,
+        normalized: bool,
+        relativeoffset: u32,
+    ) {
+        unsafe {
+            gl().VertexArrayAttribFormat(
+                self.id(),
+                attrib_index,
+                size,
+                GLenum(r#type as u32),
+                normalized as u8,
+                relativeoffset,
+            );
         }
     }
 

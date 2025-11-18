@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use gl;
+use gl::{self, BufferTarget};
 use nalgebra_glm::Mat4;
 
 use crate::{Texture, scene::camera::Camera, shader_program::ShaderProgram};
@@ -64,41 +64,27 @@ impl Model {
 
         let vertex_count = (polygons.len() * 3) as i32;
 
+        let mut vertex_buffer = gl::Buffer::create1();
+        vertex_buffer.storage(vertices, gl::BufferStorageFlag::DynamicStorage);
+
+        let mut index_buffer = gl::Buffer::create1();
+        index_buffer.storage(polygons, gl::BufferStorageFlag::DynamicStorage);
+
         let mut vertex_array = gl::VertexArray::create1();
-        vertex_array.bind();
-
-        let mut vertex_buffer = gl::Buffer::gen1();
-        vertex_buffer.bind(gl::BufferTarget::ArrayBuffer);
-        gl::buffer_data(
-            gl::BufferTarget::ArrayBuffer,
-            vertices,
-            gl::BufferUsage::StaticDraw,
-        );
-        // vertex_buffer.storage(vertices, gl::BufferUsage::StaticDraw);
-
-        let mut index_buffer = gl::Buffer::gen1();
-        index_buffer.bind(gl::BufferTarget::ElementArrayBuffer);
-        gl::buffer_data(
-            gl::BufferTarget::ElementArrayBuffer,
-            polygons,
-            gl::BufferUsage::StaticDraw,
-        );
-        // index_buffer.storage(polygons, gl::BufferUsage::StaticDraw);
+        vertex_array.vertex_buffer(0, &vertex_buffer, 0, size_of::<Vertex>());
+        vertex_array.element_buffer(&index_buffer);
 
         let attribute_descriptions = Self::default_attribute_descriptions();
-
         for attr in attribute_descriptions.iter() {
             vertex_array.enable_attrib(attr.location);
-            unsafe {
-                gl::vertex_attrib_pointer(
-                    attr.location,
-                    attr.components,
-                    attr.data_type,
-                    false,
-                    attr.stride,
-                    attr.offset,
-                );
-            }
+            vertex_array.attrib_format(
+                attr.location,
+                attr.components,
+                attr.data_type,
+                false,
+                attr.offset as u32,
+            );
+            vertex_array.attrib_binding(attr.location, 0);
         }
 
         let model_location = shader_program.uniform_location("model");
