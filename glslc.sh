@@ -25,12 +25,12 @@ function compile {
     $file_path \
     -o "$dir/glsl_${basename}.spv"
 
-  glslc \
-    --target-env=opengl4.5 \
-    -fshader-stage=$shader_type \
-    -S \
-    $file_path \
-    -o "$dir/glsl_${basename}.spv.s"
+  # glslc \
+  #   --target-env=opengl4.5 \
+  #   -fshader-stage=$shader_type \
+  #   -S \
+  #   $file_path \
+  #   -o "$dir/glsl_${basename}.spv.s"
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}[SUCCESS]${NC} $file_path -> ${PURPLE}glsl_${basename}.spv${NC}"

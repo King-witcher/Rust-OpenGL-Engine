@@ -131,6 +131,7 @@ impl KEngine {
 
 fn load_cube(shader_program: Rc<ShaderProgram>, texture: Rc<Texture>) -> Model {
     let vertices = vec![
+        // Front
         Vertex {
             position: [-1.0, -1.0, 1.0],
             color: [0.0, 0.0, 1.0],
@@ -219,8 +220,8 @@ fn load_scene(archive: &EngineArchive, shader_program: Rc<ShaderProgram>) -> Res
             fov: 90.0,
             aspect: 16.0 / 9.0,
         },
-        far: 1000.0,
-        near: 0.01,
+        far: 100.0,
+        near: 0.1,
         position: glm::vec3(0.0, 0.0, 0.0),
     });
 

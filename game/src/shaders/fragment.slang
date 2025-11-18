@@ -9,7 +9,7 @@ struct FSOutput
     float4 color : SV_Target;
 }
 
-Texture2D texture1;
+Texture2D texture1 : register(t0);
 SamplerState sampler1;
 
 [shader("fragment")]
