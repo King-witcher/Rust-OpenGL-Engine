@@ -33,6 +33,9 @@ impl KEngine {
         });
 
         gl::load_fns(|s| window.get_proc_address(s)).unwrap();
+        gl::enable(Capability::DebugOutput);
+        gl::enable(Capability::DebugOutputSynchronous);
+        gl::debug_message_callback(Some(debug_callback), std::ptr::null());
 
         let archive = EngineArchive::new("base").expect("Failed to load base archive");
 
@@ -127,6 +130,17 @@ impl KEngine {
         self.scene.render();
         self.window.swap_window();
     }
+}
+
+fn debug_callback(
+    source: gl::DebugMessageSource,
+    r#type: gl::DebugMessageType,
+    id: u32,
+    severity: gl::DebugMessageSeverity,
+    message: &str,
+    _: *const (),
+) {
+    eprintln!("[OpenGL Debug] {} {}", severity, message);
 }
 
 fn load_cube(shader_program: Rc<ShaderProgram>, texture: Rc<Texture>) -> Model {
