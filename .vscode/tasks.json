@@ -108,7 +108,7 @@
       },
       "group": "build",
       "dependsOrder": "sequence",
-      "dependsOn": ["glslc: compile", "cargo build: debug"],
+      "dependsOn": ["shaders: compile all", "cargo build: debug"],
     },
 
     {
@@ -119,7 +119,7 @@
       },
       "group": "build",
       "dependsOrder": "sequence",
-      "dependsOn": ["glslc: compile", "cargo build: release"],
+      "dependsOn": ["shaders: compile all", "cargo build: release"],
     },
   ]
 }
